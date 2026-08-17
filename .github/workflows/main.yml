@@ -1,0 +1,89 @@
+name: Patch and Build
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  patch-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Patch getPluginMeta → getDescription
+        run: |
+          find src -name "DynamicShopExpansion.java" -exec \
+            sed -i 's/getPluginMeta()\.getVersion()/getDescription().getVersion()/g' {} +
+
+      - name: Patch ShopDataManager - Folia scheduler → Bukkit scheduler
+        run: |
+          FILE=$(find src -name "ShopDataManager.java")
+          sed -i 's|import io.papermc.paper.threadedregions.scheduler.ScheduledTask;|import org.bukkit.scheduler.BukkitTask;|g' "$FILE"
+          sed -i 's/public static ScheduledTask saveTimer;/public static BukkitTask saveTimer;/g' "$FILE"
+          sed -i 's/private static ScheduledTask shortageTicker;/private static BukkitTask shortageTicker;/g' "$FILE"
+          perl -i -0pe 's/plugin\.getServer\(\)\.getGlobalRegionScheduler\(\)\.runAtFixedRate\(\s*\n?\s*plugin,\s*task\s*->\s*saveQueuedItems\(\),\s*([^,]+),\s*([^)]+)\)/Bukkit.getScheduler().runTaskTimer(plugin, () -> saveQueuedItems(), $1, $2)/g' "$FILE"
+          perl -i -0pe 's/plugin\.getServer\(\)\.getGlobalRegionScheduler\(\)\.runAtFixedRate\(\s*\n?\s*plugin,\s*task\s*->\s*tickAllShortage\(\),\s*([^,]+),\s*([^)]+)\)/Bukkit.getScheduler().runTaskTimer(plugin, () -> tickAllShortage(), $1, $2)/g' "$FILE"
+
+      - name: Patch DynamicShop - Folia runDelayed + wrap ShopDialogManager
+        run: |
+          FILE=$(find src -name "DynamicShop.java")
+          sed -i 's/getServer()\.getGlobalRegionScheduler()\.runDelayed(this, task -> {/Bukkit.getScheduler().runTaskLater(this, () -> {/g' "$FILE"
+          sed -i 's/this\.shopDialogManager = new org\.minecraftsmp\.dynamicshop\.gui\.ShopDialogManager(this);/try { this.shopDialogManager = new org.minecraftsmp.dynamicshop.gui.ShopDialogManager(this); } catch (NoClassDefFoundError e) { getLogger().warning("[DynamicShop] Dialog GUI unavailable on this server version - disabled."); this.shopDialogManager = null; }/g' "$FILE"
+
+      - name: Patch ChatInputListener - AsyncChatEvent → AsyncPlayerChatEvent
+        run: |
+          FILE=$(find src -name "ChatInputListener.java")
+          sed -i 's|import io.papermc.paper.event.player.AsyncChatEvent;|import org.bukkit.event.player.AsyncPlayerChatEvent;|g' "$FILE"
+          sed -i '/import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;/d' "$FILE"
+          sed -i 's/public void onChat(AsyncChatEvent event)/public void onChat(AsyncPlayerChatEvent event)/g' "$FILE"
+          sed -i 's/String input = PlainTextComponentSerializer\.plainText()\.serialize(event\.message())\.trim();/String input = event.getMessage().trim();/g' "$FILE"
+
+      - name: Patch ShopListener - RegistryAccess → Enchantment.values()
+        run: |
+          FILE=$(find src -name "ShopListener.java")
+          sed -i '/import io.papermc.paper.registry.RegistryAccess;/d' "$FILE"
+          sed -i '/import io.papermc.paper.registry.RegistryKey;/d' "$FILE"
+          sed -i '/import io.papermc.paper.threadedregions.scheduler.ScheduledTask;/d' "$FILE"
+          sed -i '/import io.papermc.paper.threadedregions/d' "$FILE"
+          sed -i 's/var registry = RegistryAccess\.registryAccess()\.getRegistry(RegistryKey\.ENCHANTMENT);//g' "$FILE"
+          sed -i 's/List<Enchantment> enchantments = new ArrayList<>();/List<Enchantment> enchantments = new ArrayList<>(java.util.Arrays.asList(Enchantment.values()));/g' "$FILE"
+          sed -i '/registry\.forEach(enchantments::add);/d' "$FILE"
+
+      - name: Patch UpdateChecker - Folia AsyncScheduler → Bukkit
+        run: |
+          FILE=$(find src -name "UpdateChecker.java")
+          sed -i '/import io.papermc.paper.threadedregions/d' "$FILE"
+          sed -i 's/Bukkit\.getAsyncScheduler()\.runNow(plugin, task ->/Bukkit.getScheduler().runTaskAsynchronously(plugin, () ->/g' "$FILE"
+          sed -i 's/Bukkit\.getAsyncScheduler()\.runDelayed(plugin, task ->/Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () ->/g' "$FILE"
+
+      - name: Patch GUI files - Component title → String for Bukkit.createInventory
+        run: |
+          find src -name "*.java" | xargs grep -l "Bukkit.createInventory" | while read FILE; do
+            perl -i -0pe 's/Bukkit\.createInventory\(([^,]+),\s*([^,]+),\s*MessageManager\.parseComponent\((\w+),\s*(?:player|viewer)\)\)/Bukkit.createInventory($1, $2, $3)/g' "$FILE"
+            perl -i -0pe 's/Bukkit\.createInventory\(([^,]+),\s*([^,]+),\s*MessageManager\.parseComponent\((\w+)\)\)/Bukkit.createInventory($1, $2, $3)/g' "$FILE"
+            perl -i -0pe 's/Bukkit\.createInventory\(([^,]+),\s*([^,]+),\s*MessageManager\.parseComponent\(("(?:[^"\\]|\\.)*"(?:\s*\+\s*[\w.()]+)*)\)\)/Bukkit.createInventory($1, $2, $3)/g' "$FILE"
+          done
+
+      - name: Install CoinsEngine locally
+        run: |
+          mvn install:install-file \
+            -Dfile=libs/CoinsEngine-2.6.0.jar \
+            -DgroupId=su.nightexpress.coinsengine \
+            -DartifactId=CoinsEngine \
+            -Dversion=2.6.0 \
+            -Dpackaging=jar
+
+      - name: Build
+        run: mvn package -B -DskipTests
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicShop-patched
+          path: target/DynamicShop-*.jar
