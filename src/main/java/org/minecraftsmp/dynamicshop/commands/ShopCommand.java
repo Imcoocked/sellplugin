@@ -65,18 +65,6 @@ public class ShopCommand implements CommandExecutor, TabCompleter {
             return handleSellHand(p);
         }
 
-        // Handle /shop sellall — open the SellAll GUI
-        if (args.length >= 1 && args[0].equalsIgnoreCase("sellall")) {
-            if (!p.hasPermission("dynamicshop.use.sellall")) {
-                p.sendMessage(plugin.getMessageManager().noPermission());
-                return true;
-            }
-            org.minecraftsmp.dynamicshop.gui.SellAllGUI sellAllGUI = new org.minecraftsmp.dynamicshop.gui.SellAllGUI(plugin, p);
-            plugin.getShopListener().registerSellAllGUI(p, sellAllGUI);
-            sellAllGUI.open();
-            return true;
-        }
-
         // Handle /shop sell <price> (player shop listing)
         if (args.length >= 2 && args[0].equalsIgnoreCase("sell")) {
             return handleSellCommand(p, args);
@@ -172,9 +160,6 @@ public class ShopCommand implements CommandExecutor, TabCompleter {
             // Add sell commands
             if ("sellhand".startsWith(args[0].toLowerCase())) {
                 out.add("sellhand");
-            }
-            if ("sellall".startsWith(args[0].toLowerCase())) {
-                out.add("sellall");
             }
             if ("sell".startsWith(args[0].toLowerCase())) {
                 out.add("sell");

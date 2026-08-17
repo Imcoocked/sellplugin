@@ -13,7 +13,7 @@ softdepend: [PlaceholderAPI, ItemsAdder, Nexo, floodgate, ValhallaMMO]
 commands:
   shop:
     description: Open the dynamic shop GUI
-    usage: /shop [<category>|sell <price>|sellhand|sellall]
+    usage: /shop [<category>|sell <price>|sellhand]
     aliases: [ dshop, market ]
     permission: dynamicshop.use
   shopadmin:
@@ -46,5 +46,5 @@ permissions:
     description: Allows selling held items via /shop sellhand
     default: false
   dynamicshop.use.sellall:
-    description: Allows selling all items via /sellall or /shop sellall
+    description: Allows selling all items via /sellall
     default: true

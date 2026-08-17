@@ -22,8 +22,7 @@ import java.util.*;
  * Shows a preview of what will be sold with prices,
  * and a confirmation button. 54-slot inventory for more space.
  *
- * Uses client-side translatable item names (renders in player's language)
- * and messages.yml keys for all text so admins can translate to Ukrainian.
+ * All text defaults to Ukrainian; admins can override via messages.yml.
  */
 public class SellAllGUI {
 
@@ -50,8 +49,8 @@ public class SellAllGUI {
         this.plugin = plugin;
         this.player = player;
 
-        String title = plugin.getMessageManager().getMessage("sellall-gui-title");
-        if (title == null) title = "&8&lПродати все";
+        // Use Ukrainian default title; messages.yml can override
+        String title = msgOrDefault("sellall-gui-title", "&8&lПродати все");
         this.inventory = Bukkit.createInventory(null, SIZE,
                 MessageManager.parseComponent(title));
 
@@ -65,6 +64,19 @@ public class SellAllGUI {
         scanInventory();
         render();
         player.openInventory(inventory);
+    }
+
+    /**
+     * Get a message from messages.yml, or return the default value if the key
+     * is missing. getMessage() returns "§cMessage not found: ..." for missing keys,
+     * so we detect that pattern and use the default instead.
+     */
+    private String msgOrDefault(String key, String defaultValue) {
+        String msg = plugin.getMessageManager().getMessage(key);
+        if (msg == null || msg.contains("Message not found:")) {
+            return defaultValue;
+        }
+        return msg;
     }
 
     /**
@@ -122,18 +134,14 @@ public class SellAllGUI {
             ItemStack emptyItem = new ItemStack(Material.HOPPER);
             ItemMeta meta = emptyItem.getItemMeta();
             if (meta != null) {
-                String emptyName = plugin.getMessageManager().getMessage("sellall-no-items");
-                if (emptyName == null) emptyName = "&cНемає предметів для продажу";
-                meta.displayName(MessageManager.parseComponent(emptyName));
-
-                String emptyLore = plugin.getMessageManager().getMessage("sellall-no-items-lore");
-                if (emptyLore == null) emptyLore = "&7У вашому інвентарі немає предметів,";
-                String emptyLore2 = plugin.getMessageManager().getMessage("sellall-no-items-lore2");
-                if (emptyLore2 == null) emptyLore2 = "&7які можна продати в магазині.";
+                meta.displayName(MessageManager.parseComponent(
+                        msgOrDefault("sellall-no-items", "&cНемає предметів для продажу")));
 
                 meta.lore(List.of(
-                        MessageManager.parseComponent(emptyLore),
-                        MessageManager.parseComponent(emptyLore2)
+                        MessageManager.parseComponent(
+                                msgOrDefault("sellall-no-items-lore", "&7У вашому інвентарі немає предметів,")),
+                        MessageManager.parseComponent(
+                                msgOrDefault("sellall-no-items-lore2", "&7які можна продати в магазині."))
                 ));
                 emptyItem.setItemMeta(meta);
             }
@@ -171,16 +179,12 @@ public class SellAllGUI {
         ItemStack info = new ItemStack(Material.PAPER);
         ItemMeta infoMeta = info.getItemMeta();
         if (infoMeta != null) {
-            String infoName = plugin.getMessageManager().getMessage("sellall-info-name");
-            if (infoName == null) infoName = "&e&lІнформація";
-            infoMeta.displayName(MessageManager.parseComponent(infoName));
+            infoMeta.displayName(MessageManager.parseComponent(
+                    msgOrDefault("sellall-info-name", "&e&lІнформація")));
 
-            String itemsLabel = plugin.getMessageManager().getMessage("sellall-info-items");
-            if (itemsLabel == null) itemsLabel = "&7Предметів: &f{count}";
-            String typesLabel = plugin.getMessageManager().getMessage("sellall-info-types");
-            if (typesLabel == null) typesLabel = "&7Типів: &f{types}";
-            String totalLabel = plugin.getMessageManager().getMessage("sellall-info-total");
-            if (totalLabel == null) totalLabel = "&7Загалом: &a{price}";
+            String itemsLabel = msgOrDefault("sellall-info-items", "&7Предметів: &f{count}");
+            String typesLabel = msgOrDefault("sellall-info-types", "&7Типів: &f{types}");
+            String totalLabel = msgOrDefault("sellall-info-total", "&7Загалом: &a{price}");
 
             Map<String, String> ph = new HashMap<>();
             ph.put("count", String.valueOf(totalItemCount));
@@ -188,13 +192,10 @@ public class SellAllGUI {
             ph.put("price", plugin.getEconomyManager().format(totalPayout));
 
             infoMeta.lore(List.of(
-                    MessageManager.parseComponent(itemsLabel.replace("{count}", ph.get("count"))
-                            .replace("{types}", ph.get("types")).replace("{price}", ph.get("price"))),
-                    MessageManager.parseComponent(typesLabel.replace("{count}", ph.get("count"))
-                            .replace("{types}", ph.get("types")).replace("{price}", ph.get("price"))),
+                    MessageManager.parseComponent(replacePlaceholders(itemsLabel, ph)),
+                    MessageManager.parseComponent(replacePlaceholders(typesLabel, ph)),
                     MessageManager.parseComponent(""),
-                    MessageManager.parseComponent(totalLabel.replace("{count}", ph.get("count"))
-                            .replace("{types}", ph.get("types")).replace("{price}", ph.get("price")))
+                    MessageManager.parseComponent(replacePlaceholders(totalLabel, ph))
             ));
             info.setItemMeta(infoMeta);
         }
@@ -204,14 +205,11 @@ public class SellAllGUI {
         ItemStack sellAllBtn = new ItemStack(Material.LIME_CONCRETE);
         ItemMeta sellMeta = sellAllBtn.getItemMeta();
         if (sellMeta != null) {
-            String sellName = plugin.getMessageManager().getMessage("sellall-confirm-name");
-            if (sellName == null) sellName = "&a&l✓ Продати все";
-            sellMeta.displayName(MessageManager.parseComponent(sellName));
+            sellMeta.displayName(MessageManager.parseComponent(
+                    msgOrDefault("sellall-confirm-name", "&a&l✓ Продати все")));
 
-            String sellLore1 = plugin.getMessageManager().getMessage("sellall-confirm-lore1");
-            if (sellLore1 == null) sellLore1 = "&7Натисніть, щоб продати всі";
-            String sellLore2 = plugin.getMessageManager().getMessage("sellall-confirm-lore2");
-            if (sellLore2 == null) sellLore2 = "&7предмети зі свого інвентарю";
+            String sellLore1 = msgOrDefault("sellall-confirm-lore1", "&7Натисніть, щоб продати всі");
+            String sellLore2 = msgOrDefault("sellall-confirm-lore2", "&7предмети зі свого інвентарю");
 
             Map<String, String> ph = new HashMap<>();
             ph.put("count", String.valueOf(totalItemCount));
@@ -231,9 +229,8 @@ public class SellAllGUI {
         ItemStack cancelBtn = new ItemStack(Material.RED_CONCRETE);
         ItemMeta cancelMeta = cancelBtn.getItemMeta();
         if (cancelMeta != null) {
-            String cancelName = plugin.getMessageManager().getMessage("sellall-cancel-name");
-            if (cancelName == null) cancelName = "&c&l✗ Скасувати";
-            cancelMeta.displayName(MessageManager.parseComponent(cancelName));
+            cancelMeta.displayName(MessageManager.parseComponent(
+                    msgOrDefault("sellall-cancel-name", "&c&l✗ Скасувати")));
             cancelBtn.setItemMeta(cancelMeta);
         }
         inventory.setItem(SLOT_CANCEL, cancelBtn);
@@ -258,7 +255,7 @@ public class SellAllGUI {
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            // Use client-side translation for the item name
+            // Display name: custom_name > prettified material name
             String customName = ShopDataManager.getCustomName(mat);
             if (customName != null) {
                 meta.displayName(MessageManager.parseComponent("&e&l" + customName));
@@ -269,19 +266,16 @@ public class SellAllGUI {
             List<String> lore = new ArrayList<>();
 
             // Amount line
-            String amountLabel = plugin.getMessageManager().getMessage("sellall-lore-amount");
-            if (amountLabel == null) amountLabel = "&7Кількість: &f{amount}";
+            String amountLabel = msgOrDefault("sellall-lore-amount", "&7Кількість: &f{amount}");
             lore.add(amountLabel.replace("{amount}", String.valueOf(heldAmount)));
 
             // Sell price line
-            String priceLabel = plugin.getMessageManager().getMessage("sellall-lore-price");
-            if (priceLabel == null) priceLabel = "&7Ціна продажу: &e{price}";
+            String priceLabel = msgOrDefault("sellall-lore-price", "&7Ціна продажу: &e{price}");
             lore.add(priceLabel.replace("{price}", plugin.getEconomyManager().format(payout)));
 
             // Per-unit price
             double unitPrice = sellAmount > 0 ? payout / sellAmount : 0;
-            String unitLabel = plugin.getMessageManager().getMessage("sellall-lore-unit");
-            if (unitLabel == null) unitLabel = "&8({price} за шт.)";
+            String unitLabel = msgOrDefault("sellall-lore-unit", "&8({price} за шт.)");
             lore.add(unitLabel.replace("{price}", plugin.getEconomyManager().format(unitPrice)));
 
             meta.lore(lore.stream().map(s -> MessageManager.parseComponent(s)).toList());
@@ -295,9 +289,8 @@ public class SellAllGUI {
      */
     public void executeSellAll() {
         if (sellableItems.isEmpty()) {
-            String emptyMsg = plugin.getMessageManager().getMessage("sellall-no-items");
-            if (emptyMsg == null) emptyMsg = "&cНемає предметів для продажу!";
-            player.sendMessage(MessageManager.parseComponent(emptyMsg));
+            player.sendMessage(MessageManager.parseComponent(
+                    msgOrDefault("sellall-no-items", "&cНемає предметів для продажу!")));
             return;
         }
 
@@ -352,9 +345,8 @@ public class SellAllGUI {
         }
 
         if (actualItems == 0) {
-            String failMsg = plugin.getMessageManager().getMessage("sellall-failed");
-            if (failMsg == null) failMsg = "&cНе вдалося продати жодного предмету (сховище переповнене).";
-            player.sendMessage(MessageManager.parseComponent(failMsg));
+            player.sendMessage(MessageManager.parseComponent(
+                    msgOrDefault("sellall-failed", "&cНе вдалося продати жодного предмету (сховище переповнене).")));
             return;
         }
 
@@ -365,12 +357,16 @@ public class SellAllGUI {
         ph.put("types", String.valueOf(actualTypes));
         ph.put("price", plugin.getEconomyManager().format(actualPayout));
 
-        String successMsg = plugin.getMessageManager().getMessage("sellall-success", ph);
-        if (successMsg == null) successMsg = "&a✓ &7Продано &f{count} предметів &7(&e{types} типів&7) за &a{price}";
-        player.sendMessage(MessageManager.parseComponent(
-                successMsg.replace("{count}", ph.get("count"))
-                        .replace("{types}", ph.get("types"))
-                        .replace("{price}", ph.get("price"))));
+        String successTemplate = msgOrDefault("sellall-success",
+                "&a✓ &7Продано &f{count} предметів &7(&e{types} типів&7) за &a{price}");
+        player.sendMessage(MessageManager.parseComponent(replacePlaceholders(successTemplate, ph)));
+    }
+
+    private String replacePlaceholders(String text, Map<String, String> placeholders) {
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+        return text;
     }
 
     private boolean isDamaged(ItemStack item) {

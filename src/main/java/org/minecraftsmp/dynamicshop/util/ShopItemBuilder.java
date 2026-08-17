@@ -133,37 +133,29 @@ public class ShopItemBuilder {
     }
 
     // ---------------------------------------------------------
-    // TRANSLATABLE ITEM NAME
-    // Uses Minecraft's built-in translation keys so item names
-    // render in the player's client language (e.g. Ukrainian).
+    // DISPLAY ITEM NAME
+    // Prettifies the Material enum name into a readable format
+    // e.g. IRON_BOOTS → "Iron Boots"
+    // This works on all server types (Paper, Spigot, NeoForge compat).
     // ---------------------------------------------------------
     public static Component translatableItemName(Material mat) {
-        try {
-            return Component.translatable(mat.translationKey())
-                    .color(NamedTextColor.YELLOW)
-                    .decorate(TextDecoration.BOLD);
-        } catch (NoSuchMethodError e) {
-            // Fallback for older servers without Material.translationKey()
-            return component("§e§l" + prettify(mat.name()));
-        }
+        return Component.text(prettify(mat.name()))
+                .color(NamedTextColor.YELLOW)
+                .decorate(TextDecoration.BOLD);
     }
 
     /**
-     * Get the translation key for a material, or prettified name as fallback.
+     * Get the prettified display name for a material.
      */
     public static String getMaterialTranslationKey(Material mat) {
-        try {
-            return mat.translationKey();
-        } catch (NoSuchMethodError e) {
-            return prettify(mat.name());
-        }
+        return prettify(mat.name());
     }
 
     // ---------------------------------------------------------
     // UTILITY – PRETTIFY MATERIAL NAMES (fallback)
     // STONE_BRICKS => Stone Bricks
     // ---------------------------------------------------------
-    static String prettify(String input) {
+    public static String prettify(String input) {
         String[] parts = input.split("_");
         StringBuilder out = new StringBuilder();
 
