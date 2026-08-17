@@ -18,7 +18,18 @@ import java.util.List;
 /**
  * GUI for selecting a category to browse in the shop.
  * 
- * Now uses CategoryConfigManager for dynamic slot positions, icons, and names.
+ * Uses CategoryConfigManager for dynamic slot positions, icons, and names.
+ * Layout: LIGHT_BLUE_STAINED_GLASS_PANE border frame with items in center.
+ *
+ * Border layout (6 rows x 9 columns = 54 slots):
+ * [G][G][G][G][G][G][G][G][G]   (row 0)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 1)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 2)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 3)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 4)
+ * [G][G][G][G][G][G][G][G][G]   (row 5)
+ *
+ * Center area (5 cols x 4 rows = 20 slots): rows 1-4, columns 2-6
  */
 public class CategorySelectionGUI {
 
@@ -27,6 +38,10 @@ public class CategorySelectionGUI {
     private final Inventory inv;
 
     private static final int SIZE = 54;
+    private static final int COLS = 9;
+
+    // Border material — light blue stained glass pane as shown in the design
+    private static final Material BORDER_MATERIAL = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
 
     public CategorySelectionGUI(DynamicShop plugin, Player player) {
         this.plugin = plugin;
@@ -48,11 +63,9 @@ public class CategorySelectionGUI {
         // Clear inventory
         inv.clear();
 
-        // Fill all slots with filler first
-        ItemStack filler = createFiller();
-        for (int i = 0; i < SIZE; i++) {
-            inv.setItem(i, filler);
-        }
+        // Draw the border frame with light blue stained glass panes
+        ItemStack border = createBorderPane();
+        drawBorder(border);
 
         // Place categories at their configured slots
         for (ItemCategory category : ItemCategory.values()) {
@@ -61,6 +74,44 @@ public class CategorySelectionGUI {
                 inv.setItem(slot, createCategoryItem(category));
             }
         }
+    }
+
+    /**
+     * Draw the border frame:
+     * - Top row (slots 0-8): all glass
+     * - Bottom row (slots 45-53): all glass
+     * - Middle rows (1-4): glass at columns 0,1 and 7,8
+     */
+    private void drawBorder(ItemStack border) {
+        // Top row
+        for (int col = 0; col < COLS; col++) {
+            inv.setItem(col, border);
+        }
+        // Middle rows — left and right edges
+        for (int row = 1; row <= 4; row++) {
+            int base = row * COLS;
+            inv.setItem(base, border);       // column 0
+            inv.setItem(base + 1, border);   // column 1
+            inv.setItem(base + 7, border);   // column 7
+            inv.setItem(base + 8, border);   // column 8
+        }
+        // Bottom row
+        for (int col = 0; col < COLS; col++) {
+            inv.setItem(5 * COLS + col, border);
+        }
+    }
+
+    /**
+     * Create the border glass pane with an invisible name.
+     */
+    private ItemStack createBorderPane() {
+        ItemStack pane = new ItemStack(BORDER_MATERIAL);
+        ItemMeta meta = pane.getItemMeta();
+        if (meta != null) {
+            meta.displayName(MessageManager.parseComponent(" "));
+            pane.setItemMeta(meta);
+        }
+        return pane;
     }
 
     private ItemStack createCategoryItem(ItemCategory category) {
@@ -119,10 +170,6 @@ public class CategorySelectionGUI {
                     .count();
             return normalItems + (int) specialItems;
         }
-    }
-
-    private ItemStack createFiller() {
-        return org.minecraftsmp.dynamicshop.managers.ConfigCacheManager.getFillerItem();
     }
 
     public void handleClick(Player p, int slot) {

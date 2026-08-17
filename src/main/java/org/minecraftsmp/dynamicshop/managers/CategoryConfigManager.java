@@ -26,7 +26,8 @@ public class CategoryConfigManager {
     private static final Map<ItemCategory, String> categoryIcons = new HashMap<>();
     private static final Map<ItemCategory, String> categoryNames = new HashMap<>();
 
-    // Default slot positions (same as original CategorySelectionGUI layout)
+    // Default slot positions — arranged within the center area of the border layout
+    // Center area: rows 1-4, columns 2-6 (slots 11-15, 20-24, 29-33, 38-42)
     // Custom categories default to -1 (hidden) until admin assigns a slot
     private static final Map<ItemCategory, Integer> DEFAULT_SLOTS = new HashMap<>();
     static {
@@ -39,8 +40,8 @@ public class CategoryConfigManager {
         DEFAULT_SLOTS.put(ItemCategory.FARMING, 30);
         DEFAULT_SLOTS.put(ItemCategory.WOOD, 31);
         DEFAULT_SLOTS.put(ItemCategory.PERMISSIONS, 32);
+        DEFAULT_SLOTS.put(ItemCategory.PLAYER_SHOPS, 33);
         DEFAULT_SLOTS.put(ItemCategory.SERVER_SHOP, -1); // Hidden by default - not needed on main page
-        DEFAULT_SLOTS.put(ItemCategory.PLAYER_SHOPS, 40);
         // Custom categories hidden by default (-1)
         for (ItemCategory cat : ItemCategory.values()) {
             if (cat.isCustomCategory()) {
@@ -154,7 +155,9 @@ public class CategoryConfigManager {
                 "Category Configuration",
                 "Customize display order, icons, and names",
                 "",
-                "slot: The inventory slot position (0-44 for a 54-slot GUI, -1 = hidden)",
+                "Border layout: glass pane frame with center area for categories",
+                "Center slots: rows 1-4, columns 2-6 → slots 11-15, 20-24, 29-33, 38-42",
+                "slot: The inventory slot position (use center area, -1 = hidden)",
                 "icon: Override the default icon (optional, must be a valid material name)",
                 "name: Override the default display name (optional)",
                 "",
