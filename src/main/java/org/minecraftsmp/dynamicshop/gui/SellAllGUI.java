@@ -20,7 +20,18 @@ import java.util.*;
 /**
  * GUI for selling all sellable items at once.
  * Shows a preview of what will be sold with prices,
- * and a confirmation button. 54-slot inventory for more space.
+ * and a confirmation button. 54-slot inventory with border frame.
+ *
+ * Layout (6 rows x 9 columns = 54 slots):
+ * [G][G][G][G][G][G][G][G][G]   (row 0 — top border)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 1 — left/right border + items)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 2)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 3)
+ * [G][G][ ][ ][ ][ ][ ][G][G]   (row 4)
+ * [G][G][G][G][G][G][G][G][G]   (row 5 — bottom border, with nav buttons)
+ *
+ * Center area: rows 1-4, columns 2-6 (5 cols x 4 rows = 20 item slots)
+ * Nav buttons in bottom border row: slots 47 (info), 49 (sell all), 51 (cancel)
  *
  * All text defaults to Ukrainian; admins can override via messages.yml.
  */
@@ -30,14 +41,23 @@ public class SellAllGUI {
     private final Player player;
     private final Inventory inventory;
 
-    private static final int SIZE = 54; // 6 rows — more slots for items
-    private static final int ITEM_SLOTS = 45; // First 5 rows for items
-    private static final int NAV_ROW_START = 45; // Bottom row for nav
+    private static final int SIZE = 54;
+    private static final int COLS = 9;
 
-    // Nav slots
+    // Border material — light blue stained glass pane matching the design image
+    private static final Material BORDER_MATERIAL = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+
+    // Center area: rows 1-4, columns 2-6
+    // That's 5 columns x 4 rows = 20 item slots
+    private static final int CENTER_ROW_START = 1;
+    private static final int CENTER_ROW_END = 4;
+    private static final int CENTER_COL_START = 2;
+    private static final int CENTER_COL_END = 6;
+
+    // Nav slots (in bottom border row — row 5, slots 45-53)
+    private static final int SLOT_INFO = 47;      // Info button
     private static final int SLOT_SELL_ALL = 49;  // Center — confirm button
-    private static final int SLOT_INFO = 46;       // Summary info
-    private static final int SLOT_CANCEL = 53;     // Close
+    private static final int SLOT_CANCEL = 51;    // Cancel/close
 
     // Pre-computed sellable data
     private final Map<Material, Integer> sellableItems;
@@ -122,15 +142,12 @@ public class SellAllGUI {
     private void render() {
         inventory.clear();
 
-        ItemStack filler = org.minecraftsmp.dynamicshop.managers.ConfigCacheManager.getFillerItem();
-
-        // Fill all slots with filler
-        for (int i = 0; i < SIZE; i++) {
-            inventory.setItem(i, filler);
-        }
+        // Draw the border frame
+        ItemStack border = createBorderPane();
+        drawBorder(border);
 
         if (sellableItems.isEmpty()) {
-            // No items to sell — show empty message
+            // No items to sell — show empty message in center
             ItemStack emptyItem = new ItemStack(Material.HOPPER);
             ItemMeta meta = emptyItem.getItemMeta();
             if (meta != null) {
@@ -145,14 +162,15 @@ public class SellAllGUI {
                 ));
                 emptyItem.setItemMeta(meta);
             }
+            // Place in center of the inner area (row 2, col 4 = slot 22)
             inventory.setItem(22, emptyItem);
             return;
         }
 
-        // Render sellable items in first 5 rows
-        int slot = 0;
+        // Render sellable items in the center area (rows 1-4, cols 2-6)
+        int itemIndex = 0;
         for (Map.Entry<Material, Integer> entry : sellableItems.entrySet()) {
-            if (slot >= ITEM_SLOTS) break;
+            if (itemIndex >= getCenterSlotCount()) break;
 
             Material mat = entry.getKey();
             int amount = entry.getValue();
@@ -169,13 +187,14 @@ public class SellAllGUI {
             double payout = ShopDataManager.getTotalSellValue(mat, sellAmount);
 
             ItemStack displayItem = buildSellableItem(mat, amount, sellAmount, payout);
+            int slot = getCenterSlot(itemIndex);
             inventory.setItem(slot, displayItem);
-            slot++;
+            itemIndex++;
         }
 
-        // ---- Navigation row ----
+        // ---- Navigation row (bottom border, row 5) ----
 
-        // Info button (slot 46) — summary
+        // Info button (slot 47) — summary
         ItemStack info = new ItemStack(Material.PAPER);
         ItemMeta infoMeta = info.getItemMeta();
         if (infoMeta != null) {
@@ -225,7 +244,7 @@ public class SellAllGUI {
         }
         inventory.setItem(SLOT_SELL_ALL, sellAllBtn);
 
-        // Cancel / close (slot 53)
+        // Cancel / close (slot 51)
         ItemStack cancelBtn = new ItemStack(Material.RED_CONCRETE);
         ItemMeta cancelMeta = cancelBtn.getItemMeta();
         if (cancelMeta != null) {
@@ -234,6 +253,69 @@ public class SellAllGUI {
             cancelBtn.setItemMeta(cancelMeta);
         }
         inventory.setItem(SLOT_CANCEL, cancelBtn);
+    }
+
+    /**
+     * Draw the border frame with light blue stained glass panes:
+     * - Top row (slots 0-8): all glass
+     * - Bottom row (slots 45-53): all glass
+     * - Middle rows (1-4): glass at columns 0,1 and 7,8
+     */
+    private void drawBorder(ItemStack border) {
+        // Top row
+        for (int col = 0; col < COLS; col++) {
+            inv().setItem(col, border);
+        }
+        // Middle rows — left and right edges (2 columns on each side)
+        for (int row = 1; row <= 4; row++) {
+            int base = row * COLS;
+            inv().setItem(base, border);       // column 0
+            inv().setItem(base + 1, border);   // column 1
+            inv().setItem(base + 7, border);   // column 7
+            inv().setItem(base + 8, border);   // column 8
+        }
+        // Bottom row
+        for (int col = 0; col < COLS; col++) {
+            inv().setItem(5 * COLS + col, border);
+        }
+    }
+
+    /**
+     * Create the border glass pane with an invisible name.
+     */
+    private ItemStack createBorderPane() {
+        ItemStack pane = new ItemStack(BORDER_MATERIAL);
+        ItemMeta meta = pane.getItemMeta();
+        if (meta != null) {
+            meta.displayName(MessageManager.parseComponent(" "));
+            pane.setItemMeta(meta);
+        }
+        return pane;
+    }
+
+    /**
+     * Get the inventory slot for a center-area item by its index.
+     * Center area: rows 1-4, columns 2-6 (5 cols x 4 rows = 20 slots)
+     * Items fill left-to-right, top-to-bottom within the center area.
+     */
+    private int getCenterSlot(int index) {
+        int centerCols = CENTER_COL_END - CENTER_COL_START + 1; // 5
+        int row = CENTER_ROW_START + (index / centerCols);
+        int col = CENTER_COL_START + (index % centerCols);
+        return row * COLS + col;
+    }
+
+    /**
+     * Total number of center-area slots.
+     */
+    private int getCenterSlotCount() {
+        int centerCols = CENTER_COL_END - CENTER_COL_START + 1; // 5
+        int centerRows = CENTER_ROW_END - CENTER_ROW_START + 1; // 4
+        return centerCols * centerRows; // 20
+    }
+
+    private Inventory inv() {
+        return inventory;
     }
 
     /**
@@ -255,7 +337,7 @@ public class SellAllGUI {
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            // Display name: custom_name > prettified material name
+            // Display name: custom_name > translatable material name
             String customName = ShopDataManager.getCustomName(mat);
             if (customName != null) {
                 meta.displayName(MessageManager.parseComponent("&e&l" + customName));
