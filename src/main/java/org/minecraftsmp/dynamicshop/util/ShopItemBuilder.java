@@ -31,7 +31,7 @@ public class ShopItemBuilder {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
 
-            meta.displayName(translatableItemName(mat));
+            applyItemName(meta, mat);
 
             List<Component> lore = new ArrayList<>();
             lore.add(component("§7────────────────────"));
@@ -133,22 +133,50 @@ public class ShopItemBuilder {
     }
 
     // ---------------------------------------------------------
-    // DISPLAY ITEM NAME
-    // Prettifies the Material enum name into a readable format
-    // e.g. IRON_BOOTS → "Iron Boots"
-    // This works on all server types (Paper, Spigot, NeoForge compat).
+    // TRANSLATABLE ITEM NAME
+    // Uses Minecraft's built-in translation keys so item names
+    // render in the player's client language (e.g. Ukrainian).
+    // Falls back to prettified English if translationKey() is
+    // unavailable (very old servers).
     // ---------------------------------------------------------
     public static Component translatableItemName(Material mat) {
-        return Component.text(prettify(mat.name()))
-                .color(NamedTextColor.YELLOW)
-                .decorate(TextDecoration.BOLD);
+        try {
+            return Component.translatable(mat.translationKey())
+                    .color(NamedTextColor.YELLOW)
+                    .decorate(TextDecoration.BOLD);
+        } catch (NoSuchMethodError | NoClassDefFoundError e) {
+            // Fallback for servers without Material.translationKey()
+            return component("§e§l" + prettify(mat.name()));
+        }
     }
 
     /**
-     * Get the prettified display name for a material.
+     * Apply a translatable item name to an ItemStack's ItemMeta.
+     * Sets BOTH displayName() and itemName() because some hybrid
+     * servers (Mohist, etc.) may serialize one but not the other.
+     *
+     * @param meta The ItemMeta to modify
+     * @param mat  The Material whose name to display
+     */
+    public static void applyItemName(ItemMeta meta, Material mat) {
+        Component name = translatableItemName(mat);
+        meta.displayName(name);
+        try {
+            meta.itemName(name);
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
+            // itemName() not available on older Paper versions — displayName is enough
+        }
+    }
+
+    /**
+     * Get the translation key for a material, or prettified name as fallback.
      */
     public static String getMaterialTranslationKey(Material mat) {
-        return prettify(mat.name());
+        try {
+            return mat.translationKey();
+        } catch (NoSuchMethodError | NoClassDefFoundError e) {
+            return prettify(mat.name());
+        }
     }
 
     // ---------------------------------------------------------

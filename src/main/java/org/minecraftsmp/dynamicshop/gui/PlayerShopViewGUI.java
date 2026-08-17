@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.minecraftsmp.dynamicshop.managers.MessageManager;
 import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -127,8 +128,10 @@ public class PlayerShopViewGUI {
             // Preserve original custom name if it exists
             // Otherwise use material name
             if (!meta.hasDisplayName()) {
-                meta.displayName(ShopItemBuilder.translatableItemName(displayItem.getType())
-                        .color(NamedTextColor.WHITE));
+                Component name = ShopItemBuilder.translatableItemName(displayItem.getType())
+                        .color(NamedTextColor.WHITE);
+                meta.displayName(name);
+                try { meta.itemName(name); } catch (NoSuchMethodError ignored) {}
             }
             // If it has a custom name, keep it exactly as-is!
 

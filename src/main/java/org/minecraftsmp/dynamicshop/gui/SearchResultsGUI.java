@@ -125,7 +125,7 @@ public class SearchResultsGUI {
             meta.displayName(nameComponent);
             meta.itemName(nameComponent);
         } else if (!meta.hasDisplayName()) {
-            meta.displayName(ShopItemBuilder.translatableItemName(mat));
+            ShopItemBuilder.applyItemName(meta, mat);
         }
 
         double buy = ShopDataManager.getTotalBuyCost(mat, 1);

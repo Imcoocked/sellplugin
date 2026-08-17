@@ -102,7 +102,7 @@ public class ItemActionGUI {
         ItemStack item = new ItemStack(targetItem, 1);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(ShopItemBuilder.translatableItemName(targetItem));
+            ShopItemBuilder.applyItemName(meta, targetItem);
             item.setItemMeta(meta);
         }
         return item;

@@ -496,7 +496,7 @@ public class ShopGUI {
                 meta.itemName(nameComponent);
             } else if (!meta.hasDisplayName()) {
                 // No custom name and no template name — use client-side translation
-                meta.displayName(ShopItemBuilder.translatableItemName(mat));
+                ShopItemBuilder.applyItemName(meta, mat);
             }
 
             List<String> lore = new ArrayList<>();

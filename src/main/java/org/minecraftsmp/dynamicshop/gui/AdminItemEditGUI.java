@@ -112,7 +112,7 @@ public class AdminItemEditGUI {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(ShopItemBuilder.translatableItemName(material));
+            ShopItemBuilder.applyItemName(meta, material);
 
             List<String> lore = new ArrayList<>();
             lore.add("§7═══════════════════════");

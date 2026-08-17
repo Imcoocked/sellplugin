@@ -260,7 +260,7 @@ public class SellAllGUI {
             if (customName != null) {
                 meta.displayName(MessageManager.parseComponent("&e&l" + customName));
             } else if (!meta.hasDisplayName()) {
-                meta.displayName(ShopItemBuilder.translatableItemName(mat));
+                ShopItemBuilder.applyItemName(meta, mat);
             }
 
             List<String> lore = new ArrayList<>();
