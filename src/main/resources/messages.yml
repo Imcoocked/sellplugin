@@ -196,6 +196,26 @@ messages:
   dialog-error-no-items-sell: "&cYou don't have any to sell!"
   dialog-lore-click-to-open: "&eClick to open"
 
+  # SellAll GUI messages (Ukrainian defaults)
+  sellall-gui-title: "&8&lПродати все"
+  sellall-no-items: "&cНемає предметів для продажу"
+  sellall-no-items-lore: "&7У вашому інвентарі немає предметів,"
+  sellall-no-items-lore2: "&7які можна продати в магазині."
+  sellall-info-name: "&e&lІнформація"
+  sellall-info-items: "&7Предметів: &f{count}"
+  sellall-info-types: "&7Типів: &f{types}"
+  sellall-info-total: "&7Загалом: &a{price}"
+  sellall-confirm-name: "&a&l✓ Продати все"
+  sellall-confirm-lore1: "&7Натисніть, щоб продати всі"
+  sellall-confirm-lore2: "&7предмети зі свого інвентарю"
+  sellall-cancel-name: "&c&l✗ Скасувати"
+  sellall-lore-amount: "&7Кількість: &f{amount}"
+  sellall-lore-price: "&7Ціна продажу: &e{price}"
+  sellall-lore-unit: "&8({price} за шт.)"
+  sellall-success: "&a✓ &7Продано &f{count} предметів &7(&e{types} типів&7) за &a{price}"
+  sellall-failed: "&cНе вдалося продати жодного предмету (сховище переповнене)."
+  sellall-console-only: "&cТільки гравці можуть використовувати цю команду."
+
 # ================================================================
 # Translation Guide
 # ================================================================

@@ -10,6 +10,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.minecraftsmp.dynamicshop.managers.MessageManager;
+import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
+import net.kyori.adventure.text.format.NamedTextColor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -125,9 +127,8 @@ public class PlayerShopViewGUI {
             // Preserve original custom name if it exists
             // Otherwise use material name
             if (!meta.hasDisplayName()) {
-                String materialName = displayItem.getType().toString().replace("_", " ");
-                materialName = capitalizeWords(materialName);
-                meta.displayName(MessageManager.parseComponent("§f" + materialName));
+                meta.displayName(ShopItemBuilder.translatableItemName(displayItem.getType())
+                        .color(NamedTextColor.WHITE));
             }
             // If it has a custom name, keep it exactly as-is!
 
@@ -233,14 +234,7 @@ public class PlayerShopViewGUI {
             inventory.setItem(50, nextPage);
         }
 
-        // Back button
-        ItemStack back = new ItemStack(Material.BARRIER);
-        ItemMeta backMeta = back.getItemMeta();
-        if (backMeta != null) {
-            backMeta.displayName(MessageManager.parseComponent("§c◀ Back to Shops"));
-            back.setItemMeta(backMeta);
-        }
-        inventory.setItem(45, back);
+        // Slot 45 — filler (players can use ESC to close)
 
         // Shop stats
         ItemStack stats = new ItemStack(isOwnShop ? Material.EMERALD : Material.GOLD_INGOT);

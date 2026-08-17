@@ -10,6 +10,7 @@ import org.minecraftsmp.dynamicshop.DynamicShop;
 import org.minecraftsmp.dynamicshop.managers.MessageManager;
 import org.minecraftsmp.dynamicshop.managers.ShopDataManager;
 import org.minecraftsmp.dynamicshop.managers.MessageManager;
+import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,7 +102,7 @@ public class ItemActionGUI {
         ItemStack item = new ItemStack(targetItem, 1);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(MessageManager.parseComponent("§e§l" + targetItem.name().replace("_", " ")));
+            meta.displayName(ShopItemBuilder.translatableItemName(targetItem));
             item.setItemMeta(meta);
         }
         return item;

@@ -116,16 +116,7 @@ public class PlayerShopListener implements Listener {
             gui.nextPage();
             return;
         }
-        if (slot == 45) { // Back to main shop
-            player.closeInventory();
-
-            // Open category selection GUI
-            org.minecraftsmp.dynamicshop.gui.CategorySelectionGUI categoryGUI = new org.minecraftsmp.dynamicshop.gui.CategorySelectionGUI(
-                    plugin, player);
-            plugin.getShopListener().registerCategory(player, categoryGUI);
-            categoryGUI.open();
-            return;
-        }
+        // slot == 45 was Back button (BARRIER) — removed, players use ESC
         if (slot == 53) { // Info button
             return;
         }
@@ -150,11 +141,7 @@ public class PlayerShopListener implements Listener {
         if (gui == null) {
             // Can't create fallback for shop view without knowing which shop
             // Just handle navigation buttons directly
-            if (slot == 45) { // Back to browser
-                PlayerShopBrowserGUI browser = new PlayerShopBrowserGUI(plugin, player);
-                registerBrowserGUI(player, browser);
-                browser.open();
-            }
+            // slot == 45 was Back button (BARRIER) — removed, players use ESC
             return;
         }
 
@@ -167,12 +154,7 @@ public class PlayerShopListener implements Listener {
             gui.nextPage();
             return;
         }
-        if (slot == 45) { // Back to browser
-            PlayerShopBrowserGUI browser = new PlayerShopBrowserGUI(plugin, player);
-            registerBrowserGUI(player, browser);
-            browser.open();
-            return;
-        }
+        // slot == 45 was Back button (BARRIER) — removed, players use ESC
         if (slot == 49 || slot == 53) { // Info/stats buttons
             return;
         }

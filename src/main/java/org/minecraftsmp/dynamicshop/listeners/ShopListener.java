@@ -18,6 +18,7 @@ import org.bukkit.enchantments.Enchantment;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import org.minecraftsmp.dynamicshop.DynamicShop;
+import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
 import org.minecraftsmp.dynamicshop.category.ItemCategory;
 import org.minecraftsmp.dynamicshop.category.SpecialShopItem;
 import org.minecraftsmp.dynamicshop.gui.AdminCategoryEditGUI;
@@ -51,6 +52,7 @@ public class ShopListener implements Listener {
     private final Map<Player, AdminCategoryGUI> openAdminCategory = new HashMap<>();
     private final Map<Player, AdminCategoryEditGUI> openAdminCategoryEdit = new HashMap<>();
     private final Map<Player, ItemActionGUI> openItemAction = new HashMap<>();
+    private final Map<Player, org.minecraftsmp.dynamicshop.gui.SellAllGUI> openSellAll = new HashMap<>();
     private final Map<UUID, Long> lastTransaction = new HashMap<>();
 
     public ShopListener(DynamicShop plugin) {
@@ -81,6 +83,14 @@ public class ShopListener implements Listener {
         openSearch.remove(p);
     }
 
+    public void registerSellAllGUI(Player p, org.minecraftsmp.dynamicshop.gui.SellAllGUI gui) {
+        openSellAll.put(p, gui);
+    }
+
+    public void unregisterSellAllGUI(Player p) {
+        openSellAll.remove(p);
+    }
+
     public void clear(Player p) {
         openShop.remove(p);
         openCategory.remove(p);
@@ -92,6 +102,7 @@ public class ShopListener implements Listener {
         openAdminCategory.remove(p);
         openAdminCategoryEdit.remove(p);
         openItemAction.remove(p);
+        openSellAll.remove(p);
         lastTransaction.remove(p.getUniqueId());
     }
 
@@ -162,6 +173,15 @@ public class ShopListener implements Listener {
             return;
         if (e.getClickedInventory() == null)
             return;
+
+        // -------------------------
+        // SELL ALL GUI
+        // -------------------------
+        if (openSellAll.containsKey(p)) {
+            e.setCancelled(true);
+            openSellAll.get(p).handleClick(p, e.getRawSlot());
+            return;
+        }
 
         // -------------------------
         // ITEM ACTION GUI (Bedrock)
@@ -321,7 +341,7 @@ public class ShopListener implements Listener {
         int amount = isShift ? Math.min(clicked.getAmount(), 64) : 1;
 
         if (amount <= 0) {
-            String itemName = mat.name().replace("_", " ").toLowerCase();
+            String itemName = ShopItemBuilder.prettify(mat.name()).toLowerCase();
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("item", itemName);
             p.sendMessage(plugin.getMessageManager().getMessage("not-enough-items", placeholders));
@@ -429,7 +449,7 @@ public class ShopListener implements Listener {
 
             if (amount <= 0) {
                 Map<String, String> ph = new HashMap<>();
-                ph.put("item", mat.name().replace("_", " ").toLowerCase());
+                ph.put("item", ShopItemBuilder.prettify(mat.name()).toLowerCase());
                 p.sendMessage(plugin.getMessageManager().getMessage("not-enough-items", ph));
                 return;
             }
@@ -458,15 +478,7 @@ public class ShopListener implements Listener {
             return;
         }
 
-        if (local == 4) {
-            if (gui.isCommandOpened())
-                return; // Block return to categories when opened via command
-            unregisterShop(p);
-            CategorySelectionGUI cg = new CategorySelectionGUI(plugin, p);
-            cg.open();
-            registerCategory(p, cg);
-            return;
-        }
+        // local == 4 was "Back to Categories" (BARRIER) — removed, players use ESC
 
         if (local == 2) {
             gui.toggleHideOutOfStock();
@@ -614,7 +626,7 @@ public class ShopListener implements Listener {
 
         Map<String, String> ph = new HashMap<>();
         ph.put("amount", String.valueOf(amount));
-        ph.put("item", mat.name().replace("_", " ").toLowerCase());
+        ph.put("item", ShopItemBuilder.prettify(mat.name()).toLowerCase());
         ph.put("price", plugin.getEconomyManager().format(totalCost));
         p.sendMessage(plugin.getMessageManager().getMessage("bought-item", ph));
 
@@ -679,7 +691,7 @@ public class ShopListener implements Listener {
 
         if (removed == 0) {
             Map<String, String> ph = new HashMap<>();
-            ph.put("item", mat.name().replace("_", " ").toLowerCase());
+            ph.put("item", ShopItemBuilder.prettify(mat.name()).toLowerCase());
             p.sendMessage(plugin.getMessageManager().getMessage("not-enough-items", ph));
             return;
         }
@@ -733,7 +745,7 @@ public class ShopListener implements Listener {
 
         Map<String, String> ph = new HashMap<>();
         ph.put("amount", String.valueOf(actuallyRemoved));
-        ph.put("item", mat.name().replace("_", " ").toLowerCase());
+        ph.put("item", ShopItemBuilder.prettify(mat.name()).toLowerCase());
         ph.put("price", plugin.getEconomyManager().format(totalPayout));
         p.sendMessage(plugin.getMessageManager().getMessage("sold-item-success", ph));
 
@@ -935,7 +947,8 @@ public class ShopListener implements Listener {
         if (!openShop.containsKey(p) && !openCategory.containsKey(p) && !openSearch.containsKey(p)
                 && !openAdminBrowse.containsKey(p) && !openAdminEdit.containsKey(p) && !openAdminConfig.containsKey(p)
                 && !openAdminSpecialEdit.containsKey(p) && !openAdminCategory.containsKey(p)
-                && !openAdminCategoryEdit.containsKey(p) && !openItemAction.containsKey(p))
+                && !openAdminCategoryEdit.containsKey(p) && !openItemAction.containsKey(p)
+                && !openSellAll.containsKey(p))
             return;
         e.setCancelled(true);
     }
@@ -964,6 +977,10 @@ public class ShopListener implements Listener {
         }
         if (openItemAction.containsKey(p) && openItemAction.get(p).getInventory().equals(e.getInventory())) {
             openItemAction.remove(p);
+            return;
+        }
+        if (openSellAll.containsKey(p) && openSellAll.get(p).getInventory().equals(e.getInventory())) {
+            openSellAll.remove(p);
             return;
         }
         if (openShop.containsKey(p) && openShop.get(p).getInventory().equals(e.getInventory())) {

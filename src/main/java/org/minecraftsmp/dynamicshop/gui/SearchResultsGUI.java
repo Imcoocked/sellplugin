@@ -103,12 +103,9 @@ public class SearchResultsGUI {
             pm.sendSlot(inventory, i, buildResultItem(results.get(i)));
         }
 
-        // NAVIGATION BACK BUTTON
-        ItemStack back = ShopItemBuilder.navItem(
-                plugin.getMessageManager().getMessage("search-gui-back-name"),
-                Material.BARRIER,
-                plugin.getMessageManager().getMessage("search-gui-back-lore"));
-        pm.sendSlot(inventory, 49, back);
+        // Slot 49 — filler (players can use ESC to close)
+        ItemStack filler = org.minecraftsmp.dynamicshop.managers.ConfigCacheManager.getFillerItem();
+        pm.sendSlot(inventory, 49, filler);
     }
 
     private ItemStack buildResultItem(Material mat) {
@@ -128,7 +125,7 @@ public class SearchResultsGUI {
             meta.displayName(nameComponent);
             meta.itemName(nameComponent);
         } else if (!meta.hasDisplayName()) {
-            meta.displayName(MessageManager.parseComponent("§e§l" + mat.name().replace("_", " ")));
+            meta.displayName(ShopItemBuilder.translatableItemName(mat));
         }
 
         double buy = ShopDataManager.getTotalBuyCost(mat, 1);

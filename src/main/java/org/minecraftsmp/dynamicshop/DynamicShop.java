@@ -262,6 +262,11 @@ public class DynamicShop extends JavaPlugin {
         getCommand("shopadmin").setExecutor(adminCmd);
         getCommand("shopadmin").setTabCompleter(adminCmd);
 
+        // /sellall — top-level command for bulk selling
+        if (getCommand("sellall") != null) {
+            getCommand("sellall").setExecutor(new org.minecraftsmp.dynamicshop.commands.SellAllCommand(this));
+        }
+
         getLogger().info("§aDynamicShop enabled successfully.");
     }
 

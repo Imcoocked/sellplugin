@@ -4,6 +4,8 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.minecraftsmp.dynamicshop.managers.MessageManager;
 
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ public class ShopItemBuilder {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
 
-            meta.displayName(component("§e§l" + prettify(mat.name())));
+            meta.displayName(translatableItemName(mat));
 
             List<Component> lore = new ArrayList<>();
             lore.add(component("§7────────────────────"));
@@ -131,10 +133,37 @@ public class ShopItemBuilder {
     }
 
     // ---------------------------------------------------------
-    // UTILITY – PRETTIFY MATERIAL NAMES
+    // TRANSLATABLE ITEM NAME
+    // Uses Minecraft's built-in translation keys so item names
+    // render in the player's client language (e.g. Ukrainian).
+    // ---------------------------------------------------------
+    public static Component translatableItemName(Material mat) {
+        try {
+            return Component.translatable(mat.translationKey())
+                    .color(NamedTextColor.YELLOW)
+                    .decorate(TextDecoration.BOLD);
+        } catch (NoSuchMethodError e) {
+            // Fallback for older servers without Material.translationKey()
+            return component("§e§l" + prettify(mat.name()));
+        }
+    }
+
+    /**
+     * Get the translation key for a material, or prettified name as fallback.
+     */
+    public static String getMaterialTranslationKey(Material mat) {
+        try {
+            return mat.translationKey();
+        } catch (NoSuchMethodError e) {
+            return prettify(mat.name());
+        }
+    }
+
+    // ---------------------------------------------------------
+    // UTILITY – PRETTIFY MATERIAL NAMES (fallback)
     // STONE_BRICKS => Stone Bricks
     // ---------------------------------------------------------
-    private static String prettify(String input) {
+    static String prettify(String input) {
         String[] parts = input.split("_");
         StringBuilder out = new StringBuilder();
 

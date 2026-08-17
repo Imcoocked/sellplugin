@@ -156,14 +156,7 @@ public class PlayerShopBrowserGUI {
             inventory.setItem(50, nextPage);
         }
 
-        // Back to main shop
-        ItemStack back = new ItemStack(Material.BARRIER);
-        ItemMeta backMeta = back.getItemMeta();
-        if (backMeta != null) {
-            backMeta.displayName(MessageManager.parseComponent("§c◀ Back to Shop"));
-            back.setItemMeta(backMeta);
-        }
-        inventory.setItem(45, back);
+        // Slot 45 — filler (players can use ESC to close)
 
         // Info/Help
         ItemStack info = new ItemStack(Material.BOOK);

@@ -21,6 +21,7 @@ import org.minecraftsmp.dynamicshop.managers.ItemsAdderWrapper;
 import org.minecraftsmp.dynamicshop.managers.NexoWrapper;
 import org.minecraftsmp.dynamicshop.managers.ShopDataManager;
 import org.minecraftsmp.dynamicshop.util.BedrockUtil;
+import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -509,7 +510,7 @@ public class ShopAdminCommand implements CommandExecutor, TabCompleter {
                     // paths (ItemsAdder, Nexo, ValhallaMMO) that may return early.
                     if (customName != null && ShopDataManager.itemConfigs.containsKey(mat)) {
                         ShopDataManager.setCustomName(mat, customName);
-                        sender.sendMessage("§a✓ §7Display name for §e" + mat.name().replace("_", " ") + " §7set to: §e" + customName);
+                        sender.sendMessage("§a✓ §7Display name for §e" + ShopItemBuilder.prettify(mat.name()) + " §7set to: §e" + customName);
                     }
 
                     String iaId = null;
@@ -581,7 +582,7 @@ public class ShopAdminCommand implements CommandExecutor, TabCompleter {
                         if (customName != null) {
                             sender.sendMessage("§7Display name: §e" + customName);
                         }
-                        sender.sendMessage("§7The regular §e" + mat.name().replace("_", " ") + " §7in the shop is unchanged.");
+                        sender.sendMessage("§7The regular §e" + ShopItemBuilder.prettify(mat.name()) + " §7in the shop is unchanged.");
                         return true;
                     }
 
@@ -627,7 +628,7 @@ public class ShopAdminCommand implements CommandExecutor, TabCompleter {
                     }
 
                     Map<String, String> placeholders = new HashMap<>();
-                    placeholders.put("item", mat.name().replace("_", " ").toLowerCase());
+                    placeholders.put("item", ShopItemBuilder.prettify(mat.name()).toLowerCase());
                     placeholders.put("price", String.valueOf(price));
                     placeholders.put("category", category.name());
 

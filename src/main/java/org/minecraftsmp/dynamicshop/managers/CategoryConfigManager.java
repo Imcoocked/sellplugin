@@ -39,7 +39,7 @@ public class CategoryConfigManager {
         DEFAULT_SLOTS.put(ItemCategory.FARMING, 30);
         DEFAULT_SLOTS.put(ItemCategory.WOOD, 31);
         DEFAULT_SLOTS.put(ItemCategory.PERMISSIONS, 32);
-        DEFAULT_SLOTS.put(ItemCategory.SERVER_SHOP, 33);
+        DEFAULT_SLOTS.put(ItemCategory.SERVER_SHOP, -1); // Hidden by default - not needed on main page
         DEFAULT_SLOTS.put(ItemCategory.PLAYER_SHOPS, 40);
         // Custom categories hidden by default (-1)
         for (ItemCategory cat : ItemCategory.values()) {

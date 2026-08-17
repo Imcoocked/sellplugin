@@ -495,9 +495,8 @@ public class ShopGUI {
                 meta.displayName(nameComponent);
                 meta.itemName(nameComponent);
             } else if (!meta.hasDisplayName()) {
-                // No custom name and no template name — use prettified material name
-                meta.displayName(
-                        MessageManager.parseComponent("§e§l" + mat.name().replace("_", " ")));
+                // No custom name and no template name — use client-side translation
+                meta.displayName(ShopItemBuilder.translatableItemName(mat));
             }
 
             List<String> lore = new ArrayList<>();
@@ -640,18 +639,8 @@ public class ShopGUI {
         ItemStack nextPage = ShopItemBuilder.navItemNexo(nextName, "shop_next_button", Material.ARROW, nextLore);
         pm.sendSlot(inventory, navRow + 8, nextPage);
 
-        // X - Back to Categories (Red X) — hidden when opened via command
-        if (commandOpened) {
-            pm.sendSlot(inventory, navRow + 4, filler);
-        } else {
-            String backName = plugin.getMessageManager().getMessage("gui-nav-back");
-            if (backName == null) backName = "§c§lBack to Categories";
-            String backLore = plugin.getMessageManager().getMessage("gui-nav-back-lore");
-            if (backLore == null) backLore = "§7Return to category selection";
-            
-            ItemStack backToCategories = ShopItemBuilder.navItemNexo(backName, "shop_categories_button", Material.BARRIER, backLore);
-            pm.sendSlot(inventory, navRow + 4, backToCategories);
-        }
+        // Slot 4 — filler (players can use ESC to close / go back)
+        pm.sendSlot(inventory, navRow + 4, filler);
 
         // Compass - Search (Anvil GUI) — hidden when opened via command
         if (!commandOpened) {

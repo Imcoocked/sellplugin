@@ -1,6 +1,6 @@
 # plugin.yml
 name: DynamicShop
-version: '2.5.9'
+version: '2.6.0'
 main: org.minecraftsmp.dynamicshop.DynamicShop
 api-version: '1.20'
 author: selfservice0
@@ -21,6 +21,10 @@ commands:
     usage: /shopadmin <reload|setstock|setrate|changerate|resetshortage|setinflation>
     aliases: [dsa, shopadm]
     permission: dynamicshop.admin
+  sellall:
+    description: Open the sell-all GUI to sell all sellable items at once
+    usage: /sellall
+    permission: dynamicshop.use.sellall
 
 permissions:
   dynamicshop.use:
@@ -42,5 +46,5 @@ permissions:
     description: Allows selling held items via /shop sellhand
     default: false
   dynamicshop.use.sellall:
-    description: Allows selling all items via /shop sellall
-    default: false
+    description: Allows selling all items via /sellall or /shop sellall
+    default: true

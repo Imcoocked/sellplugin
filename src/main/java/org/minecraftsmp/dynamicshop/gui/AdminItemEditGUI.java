@@ -10,6 +10,7 @@ import org.minecraftsmp.dynamicshop.DynamicShop;
 import org.minecraftsmp.dynamicshop.category.ItemCategory;
 import org.minecraftsmp.dynamicshop.managers.ShopDataManager;
 import org.minecraftsmp.dynamicshop.managers.MessageManager;
+import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class AdminItemEditGUI {
         this.material = material;
         this.parentGUI = parentGUI;
 
-        String itemName = material.name().replace("_", " ");
+        String itemName = ShopItemBuilder.prettify(material.name());
         this.inventory = Bukkit.createInventory(null, SIZE,
                 MessageManager.parseComponent("§4§lEdit: " + itemName));
     }
@@ -111,8 +112,7 @@ public class AdminItemEditGUI {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(
-                    MessageManager.parseComponent("§e§l" + material.name().replace("_", " ")));
+            meta.displayName(ShopItemBuilder.translatableItemName(material));
 
             List<String> lore = new ArrayList<>();
             lore.add("§7═══════════════════════");

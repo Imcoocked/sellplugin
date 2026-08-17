@@ -207,7 +207,7 @@ public class AdminShopBrowseGUI {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             // Show disabled status in name
-            String displayName = mat.name().replace("_", " ");
+            String displayName = ShopItemBuilder.prettify(mat.name());
             if (disabled) {
                 meta.displayName(
                         MessageManager.parseComponent("§c§m" + displayName + " §7(DISABLED)"));

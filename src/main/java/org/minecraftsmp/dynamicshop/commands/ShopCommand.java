@@ -15,6 +15,7 @@ import org.minecraftsmp.dynamicshop.gui.ShopGUI;
 import org.minecraftsmp.dynamicshop.managers.CategoryConfigManager;
 import org.minecraftsmp.dynamicshop.managers.ShopDataManager;
 import org.minecraftsmp.dynamicshop.transactions.Transaction;
+import org.minecraftsmp.dynamicshop.util.ShopItemBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,13 +65,16 @@ public class ShopCommand implements CommandExecutor, TabCompleter {
             return handleSellHand(p);
         }
 
-        // Handle /shop sellall
+        // Handle /shop sellall — open the SellAll GUI
         if (args.length >= 1 && args[0].equalsIgnoreCase("sellall")) {
             if (!p.hasPermission("dynamicshop.use.sellall")) {
                 p.sendMessage(plugin.getMessageManager().noPermission());
                 return true;
             }
-            return handleSellAll(p);
+            org.minecraftsmp.dynamicshop.gui.SellAllGUI sellAllGUI = new org.minecraftsmp.dynamicshop.gui.SellAllGUI(plugin, p);
+            plugin.getShopListener().registerSellAllGUI(p, sellAllGUI);
+            sellAllGUI.open();
+            return true;
         }
 
         // Handle /shop sell <price> (player shop listing)
@@ -247,7 +251,7 @@ public class ShopCommand implements CommandExecutor, TabCompleter {
 
         Map<String, String> ph = new HashMap<>();
         ph.put("amount", String.valueOf(amount));
-        ph.put("item", mat.name().replace("_", " ").toLowerCase());
+        ph.put("item", ShopItemBuilder.prettify(mat.name()).toLowerCase());
         ph.put("price", plugin.getEconomyManager().format(payout));
         p.sendMessage(plugin.getMessageManager().getMessage("sold-item-success", ph));
 
@@ -405,7 +409,7 @@ public class ShopCommand implements CommandExecutor, TabCompleter {
         boolean success = plugin.getPlayerShopManager().addListing(player, itemToList, price);
 
         if (success) {
-            String itemName = itemToList.getType().toString().toLowerCase().replace("_", " ");
+            String itemName = ShopItemBuilder.prettify(itemToList.getType().name()).toLowerCase();
             Map<String, String> ph2 = new HashMap<>();
             ph2.put("item", itemName);
             ph2.put("amount", String.valueOf(itemToList.getAmount()));
